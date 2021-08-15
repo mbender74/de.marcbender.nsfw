@@ -1,0 +1,18 @@
+#
+# this is your module manifest and used by Titanium
+# during compilation, packaging, distribution, etc.
+#
+version: 1.0.0
+apiversion: 2
+architectures: arm64 x86_64
+description: ti.nsfw
+author: Your Name
+license: Specify your license
+copyright: Copyright (c) 2019 by Your Company
+
+# these should not be edited
+name: ti.nsfw
+moduleid: de.marcbender.nsfw
+guid: 312aa9b7-4f90-412e-9e38-29049b289a8b
+platform: iphone
+minsdk: 7.5.1.GA
