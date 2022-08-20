@@ -1,7 +1,9 @@
 # de.marcbender.nsfw
 
 Titanium module for iOS and Android for NSFW image detection (not safe for work)
-
+The module uses two different recognition models for more precise detection.
+Opensource code from different sources are used (sources will be added later), also the models used are opensource....
+For iOS CoreML is used, Android uses Tensorflow Lite models
 
 ## Example
 
