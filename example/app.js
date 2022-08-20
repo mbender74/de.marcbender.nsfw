@@ -1,39 +1,69 @@
-// This is a test harness for your module
-// You should do something interesting in this harness
-// to test out the module and to provide instructions
-// to users on how to use it by example.
 
+var NSFW_MODULE = require('de.marcbender.nsfw');
 
-// open a single window
-var win = Ti.UI.createWindow({
-	backgroundColor:'white'
-});
-var label = Ti.UI.createLabel();
-win.add(label);
-win.open();
+function nsfwChecker(blob,callback){
 
-// TODO: write your module tests here
-var ti_nsfw = require('de.marcbender.nsfw');
-Ti.API.info("module is => " + ti_nsfw);
+      var thisCheckFunction = function(nsfwResultObject) {
+        console.log("");
+        console.log("");
+        console.log("++++++++++++++++++++++++++++++++++++++++++++++");
+        console.log("NSFW_MODULE RESULT: "+JSON.stringify(nsfwResultObject));
+        console.log("++++++++++++++++++++++++++++++++++++++++++++++");
+        console.log("");
 
-label.text = ti_nsfw.example();
+        var result = nsfwResultObject.class;
 
-Ti.API.info("module exampleProp is => " + ti_nsfw.exampleProp);
-ti_nsfw.exampleProp = "This is a test value";
+        NSFW_MODULE.removeEventListener('classification', thisCheckFunction);
 
-if (Ti.Platform.name == "android") {
-	var proxy = ti_nsfw.createExample({
-		message: "Creating an example Proxy",
-		backgroundColor: "red",
-		width: 100,
-		height: 100,
-		top: 100,
-		left: 150
-	});
+        if (result){
+          if ((result.second.classLabel == "Sexy" && result.identifier == "NSFW") || (result.second.classLabel == "Sexy" && result.identifier == "SFW")){
 
-	proxy.printMessage("Hello world!");
-	proxy.message = "Hi world!.  It's me again.";
-	proxy.printMessage("Hello world!");
-	win.add(proxy);
+            if (result.identifier == "SFW" && result.confidence > 0.50){
+              //callback('SFW_');
+              console.log("Image is SFW");
+            }
+            else {
+              //callback('SEXY_');
+              console.log("Image is SEXY");
+            }
+          }
+          else if ((result.confidence > 0.50 && result.identifier == "NSFW") || result.second.classLabel == "Porn"){
+            //callback('NSFW_');
+	        console.log("Image is NSFW");
+          }
+          else {
+            if (result.identifier == "SFW" && ((Number(result.confidence - result.second.output.Sexy) < 0.5) || (Number(result.confidence - result.second.output.Porn) < 0.5))){
+              //callback('NSFW_');
+   	          console.log("Image is NSFW");
+            }
+            else if (result.identifier == "SFW" && ((Number(result.confidence - result.second.output.Sexy) < 0.5))){
+              //callback('SEXY_');
+              console.log("Image is SEXY");
+            }
+            else {
+              //callback('SFW_');
+              console.log("Image is SFW");
+            }
+          }
+        }
+        else {
+          //callback('SFW_');
+          console.log("Image is SFW");
+        }
+      }
+      NSFW_MODULE.addEventListener('classification', thisCheckFunction);
+
+      NSFW_MODULE.checkImage({
+      	image:blob
+      });
+
+      result = null;
 }
+
+
+var callbackfunction = function(){};
+
+nsfwChecker(imageBlob,callbackfunction);
+
+
 

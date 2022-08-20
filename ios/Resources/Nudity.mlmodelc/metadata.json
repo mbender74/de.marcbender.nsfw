@@ -1,0 +1,76 @@
+[
+  {
+    "shortDescription" : "Classifies an image either as NSFW (nude) or SFW (not nude)",
+    "metadataOutputVersion" : "3.0",
+    "outputSchema" : [
+      {
+        "isOptional" : "0",
+        "keyType" : "String",
+        "formattedType" : "Dictionary (String → Double)",
+        "type" : "Dictionary",
+        "name" : "prob",
+        "shortDescription" : "Probabilities of classes"
+      },
+      {
+        "isOptional" : "0",
+        "formattedType" : "String",
+        "type" : "String",
+        "name" : "classLabel",
+        "shortDescription" : "NSFW or SFW"
+      }
+    ],
+    "version" : "",
+    "modelParameters" : [
+
+    ],
+    "author" : "Philipp Gabriel",
+    "specificationVersion" : 1,
+    "license" : "BSD-2",
+    "isUpdatable" : "0",
+    "availability" : {
+      "macOS" : "10.13",
+      "tvOS" : "11.0",
+      "watchOS" : "4.0",
+      "iOS" : "11.0",
+      "macCatalyst" : "11.0"
+    },
+    "modelType" : {
+      "name" : "MLModelType_neuralNetworkClassifier"
+    },
+    "inputSchema" : [
+      {
+        "height" : "224",
+        "colorspace" : "BGR",
+        "isOptional" : "0",
+        "width" : "224",
+        "isColor" : "1",
+        "formattedType" : "Image (Color 224 × 224)",
+        "hasSizeFlexibility" : "0",
+        "type" : "Image",
+        "shortDescription" : "Image used for classification",
+        "name" : "data"
+      }
+    ],
+    "classLabels" : [
+      "SFW",
+      "NSFW"
+    ],
+    "generatedClassName" : "Nudity",
+    "userDefinedMetadata" : {
+
+    },
+    "neuralNetworkLayerTypeHistogram" : {
+      "ActivationReLU" : 49,
+      "Flatten" : 1,
+      "Scale" : 53,
+      "Add" : 16,
+      "PoolingAverage" : 1,
+      "Softmax" : 1,
+      "BatchNorm" : 53,
+      "Convolution" : 53,
+      "InnerProduct" : 1,
+      "PoolingMax" : 1
+    },
+    "method" : "predict"
+  }
+]

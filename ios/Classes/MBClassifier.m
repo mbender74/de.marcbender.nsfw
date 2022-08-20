@@ -137,23 +137,7 @@
     // 1. 97.76黄/56.44黄/99.57正常/93.10黄/90.39黄
     // 2. 89.97黄/71.70黄/97.48正常/71.09黄/54.96正常
     // 3. 92.48黄/64.39黄/93.62正常/81.03黄/55.44正常
-    //
-    //结论：对于无疑的判例A和C，1的置信度更高，结果更可信;
-    //对于判例B, 2和3更高概率认定为黄图，不理想;
-    //对于判例D, 1的置信度更高（三种都认定其为黄图，取0.7的时候），我们认为也没有问题。
-    //对于判例E, 输入的画面基本全裸体，1认定为黄图，另外两种认定为正常；1是最理想的。
-    
-    // 实验表明转换会降低精度。说明这里的输入应该不转换为宜。？？！！！
-    // 不同的输入，不同的结果！
-    
-//    CGContextConcatCTM(context, CGAffineTransformMakeRotation(0)); //0
-//    CGAffineTransform flipVertical = CGAffineTransformMake( 1, 0, 0, -1, 0, CGImageGetHeight(cgRef));
-//    CGContextConcatCTM(context, flipVertical);
 
-//    CGAffineTransform flipHorizontal = CGAffineTransformMake( -1.0, 0.0, 0.0, 1.0, CGImageGetWidth(cgRef), 0.0);
-//    CGContextConcatCTM(context, flipHorizontal);
-    
-    //gzw
     CGContextConcatCTM(context, CGAffineTransformIdentity);
     
     CGContextDrawImage(context, CGRectMake(0,
@@ -169,29 +153,7 @@
     return pxbuffer;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//- (NSString *)classify:(id)imageObj handler:(void(^)(NSString*))handler2 {
-
 - (NSDictionary *)classify:(id)imageObj {
-   // NSLog(@"Classify ");
-
-//    if (self.processing) {
-//        return;
-//    }
-//    self.processing = YES;
     NSDictionary *dictionary;
 
     TiBlob *blob = (TiBlob*)imageObj;
@@ -202,41 +164,22 @@
 
     NudityOutput *output = [self.nudity predictionFromData:pixelRef error:nil];
 
-//    NudityOutput *output = [self.nudity predictionFromImage:pixelRef error:nil];
-  //  NSLog(@"Class %@", output.classLabel);
-
     CVPixelBufferRelease(pixelRef);
-  //  self.processing = NO;
-    
-   // dictionary = output.prob;
-    
+
     NSMutableDictionary * event = [NSMutableDictionary dictionary];
-    //
-    //        [event setValue:nsfwClass
-    //                 forKey:@"class"];
-    
+
     [event setValue:output.classLabel
             forKey:@"classLabel"];
     [event setValue:output.prob
             forKey:@"prob"];
     
     return event;
-    
-  //  handler2(output.classLabel);
-//    NSString *resultObject = [NSString stringWithFormat:@"{\"identifier\":\"%@\"}", output.classLabel];
-//    handler(resultObject);
 }
 
 
 
 
 - (NSDictionary *)classify2:(id)imageObj {
-   // NSLog(@"Classify ");
-
-//    if (self.processing) {
-//        return;
-//    }
-//    self.processing = YES;
     NSDictionary *dictionary;
 
     TiBlob *blob = (TiBlob*)imageObj;
@@ -245,84 +188,41 @@
 
     CVPixelBufferRef pixelRef = [resizedImage pixelBuffer];
 
-  //  NudityOutput *output = [self.nudity predictionFromData:pixelRef error:nil];
-
     Nudity2Output *output = [self.nudity2 predictionFromImage:pixelRef error:nil];
-  //  NSLog(@"Class %@", output.classLabel);
 
     CVPixelBufferRelease(pixelRef);
-  //  self.processing = NO;
-    
-   // dictionary = output.prob;
-    
+
     NSMutableDictionary * event = [NSMutableDictionary dictionary];
-    //
-    //        [event setValue:nsfwClass
-    //                 forKey:@"class"];
-    
+
     [event setValue:output.classLabel
             forKey:@"classLabel"];
     [event setValue:output.output
             forKey:@"output"];
     
     return event;
-    
-  //  handler2(output.classLabel);
-//    NSString *resultObject = [NSString stringWithFormat:@"{\"identifier\":\"%@\"}", output.classLabel];
-//    handler(resultObject);
 }
 
-
-
-
-
 - (void)classifyRequest:(id)imageObj handler:(void(^)(NSObject*))handler {
-//    NSLog(@"ClassifyRequest ");
 
     TiBlob *blob = (TiBlob*)imageObj;
     
-  //  NSLog(@"After to Blob ");
-
-                        
     UIImage *resizedImage = [[blob image] resizedImage:CGSizeMake(224, 224) interpolationQuality:kCGInterpolationHigh];
 
     CVPixelBufferRef pixelRef = [resizedImage pixelBuffer];
-
-    
-  //  NSLog(@"After to Resize ");
-
-    
+       
     VNCoreMLRequest *request = [[VNCoreMLRequest alloc] initWithModel:self.vnModel completionHandler:(VNRequestCompletionHandler)^(VNRequest *request, NSError *error){
-        
-    //    NSLog(@"In check ");
 
-//        VNImageRequestHandler *handlerTwo = [[VNImageRequestHandler alloc] initWithCGImage:resizedImage.CGImage options:@{}];
-//        [handlerTwo performRequests:@[request] error:nil];
-        
-        
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
             VNClassificationObservation *topResult = ((VNClassificationObservation *)(request.results[0]));
 
         VNClassificationObservation *secondResult = ((VNClassificationObservation *)(request.results[1]));
-
-        
-            
             
             NSDictionary * dictionary = [self classify2:blob];
         
             NSObject *resultObject = @{ @"identifier": topResult.identifier, @"confidence": NUMFLOAT(topResult.confidence), @"second": dictionary };
 
-            
-     //       NSString *resultObject = [NSString stringWithFormat:@"{\"identifier\":\"%@\",\"confidence\":\"%@\",\"second_identifier\":\"%@\",\"second_confidence\":\"%@\"}", topResult.identifier, NUMFLOAT(topResult.confidence),secondResult.identifier, NUMFLOAT(secondResult.confidence)];
-        
         handler(resultObject);
 
-
-        
-    //    [self fireEvent:@"result" withObject:@{ @"identifier": topResult.identifier, @"confidence": NUMFLOAT(topResult.confidence) }];
-        
-        
-     //       NSLog(@"Identified: %@", [topResult identifier]);
         });
     }];
 
@@ -331,72 +231,4 @@
         [handlerTwo performRequests:@[request] error:nil];
     });
 }
-
-
-
-
-
-
-//
-//
-//- (void)classifyRequest2:(id)imageObj handler:(void(^)(NSString*))handler {
-////    NSLog(@"ClassifyRequest ");
-//
-//    TiBlob *blob = (TiBlob*)imageObj;
-//    
-//  //  NSLog(@"After to Blob ");
-//
-//                        
-//    UIImage *resizedImage = [[blob image] resizedImage:CGSizeMake(224, 224) interpolationQuality:kCGInterpolationHigh];
-//
-//    CVPixelBufferRef pixelRef = [resizedImage pixelBuffer];
-//
-//    
-//  //  NSLog(@"After to Resize ");
-//
-//    
-//    VNCoreMLRequest *request = [[VNCoreMLRequest alloc] initWithModel:self.vnModel2 completionHandler:(VNRequestCompletionHandler)^(VNRequest *request, NSError *error){
-//        
-//    //    NSLog(@"In check ");
-//
-////        VNImageRequestHandler *handlerTwo = [[VNImageRequestHandler alloc] initWithCGImage:resizedImage.CGImage options:@{}];
-////        [handlerTwo performRequests:@[request] error:nil];
-//        
-//        
-//        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-//            VNClassificationObservation *topResult = ((VNClassificationObservation *)(request.results[0]));
-//
-//        VNClassificationObservation *secondResult = ((VNClassificationObservation *)(request.results[1]));
-//
-//        
-//     //   NSObject *resultObject = @{ @"identifier": topResult.identifier, @"confidence": NUMFLOAT(topResult.confidence) };
-//        
-//        
-//            NSString *resultObject = [NSString stringWithFormat:@"{\"identifier\":\"%@\",\"confidence\":\"%@\",\"second_identifier\":\"%@\",\"second_confidence\":\"%@\"}", topResult.identifier, NUMFLOAT(topResult.confidence),secondResult.identifier, NUMFLOAT(secondResult.confidence)];
-//        
-//        handler(resultObject);
-//
-//
-//        
-//    //    [self fireEvent:@"result" withObject:@{ @"identifier": topResult.identifier, @"confidence": NUMFLOAT(topResult.confidence) }];
-//        
-//        
-//     //       NSLog(@"Identified: %@", [topResult identifier]);
-//        });
-//    }];
-//
-//    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-//        VNImageRequestHandler *handlerTwo = [[VNImageRequestHandler alloc] initWithCGImage:resizedImage.CGImage options:@{}];
-//        [handlerTwo performRequests:@[request] error:nil];
-//    });
-//}
-
-
-
-
-
-
-
-
-
 @end

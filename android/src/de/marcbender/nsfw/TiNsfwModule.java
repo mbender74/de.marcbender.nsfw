@@ -10,10 +10,20 @@ package de.marcbender.nsfw;
 
 import org.appcelerator.kroll.KrollModule;
 import org.appcelerator.kroll.annotations.Kroll;
-
 import org.appcelerator.titanium.TiApplication;
 import org.appcelerator.kroll.common.Log;
 import org.appcelerator.kroll.common.TiConfig;
+import org.appcelerator.kroll.KrollDict;
+import org.appcelerator.kroll.KrollObject;
+import org.appcelerator.titanium.util.TiConvert;
+import org.appcelerator.titanium.TiBlob;
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
+import android.graphics.BitmapFactory;
+import org.appcelerator.titanium.view.TiDrawableReference;
+import java.io.IOException;
+import java.util.List;
+import de.marcbender.nsfw.ClassifierSecond.Recognition;
 
 
 @Kroll.module(name="TiNsfw", id="de.marcbender.nsfw")
@@ -23,6 +33,11 @@ public class TiNsfwModule extends KrollModule
 	// Standard Debugging variables
 	private static final String LCAT = "TiNsfwModule";
 	private static final boolean DBG = TiConfig.LOGD;
+	private static TiNsfwModule _instance;
+
+	private Classifier classifier;
+	private ClassifierSecond classifier2;
+	private Integer sensorOrientation;
 
 	// You can define constants with @Kroll.constant, for example:
 	// @Kroll.constant public static final String EXTERNAL_NAME = value;
@@ -30,37 +45,119 @@ public class TiNsfwModule extends KrollModule
 	public TiNsfwModule()
 	{
 		super();
+		_instance = this;
 	}
 
 	@Kroll.onAppCreate
 	public static void onAppCreate(TiApplication app)
 	{
-		Log.d(LCAT, "inside onAppCreate");
+		//Log.d(LCAT, "inside onAppCreate");
 		// put module init code that needs to run when the application is created
 	}
 
-	// Methods
-	@Kroll.method
-	public String example()
+	public static TiNsfwModule getInstance()
 	{
-		Log.d(LCAT, "example called");
-		return "hello world";
+		return _instance;
 	}
 
-	// Properties
 	@Kroll.method
-	@Kroll.getProperty
-	public String getExampleProp()
-	{
-		Log.d(LCAT, "get example property");
-		return "hello world";
-	}
+	public void checkImage(KrollDict params) {
+
+		if (params.containsKey("image")) {
+
+			TiBlob blob = (TiBlob) params.get("image");
+
+			TiDrawableReference drawable = TiDrawableReference.fromBlob(TiApplication.getAppCurrentActivity(), blob);
+
+			Bitmap resizedBitmap = Bitmap.createScaledBitmap(drawable.getBitmap(false,true), 224, 224, false);
+
+			try {
+	            classifier = Classifier.create(TiApplication.getAppCurrentActivity(), false, 2);
+		        classifier2 = ClassifierSecond.create(TiApplication.getAppCurrentActivity(), 2);
+
+				KrollDict classResult = new KrollDict();
+				KrollDict second = new KrollDict();
+				KrollDict output = new KrollDict();
+				KrollDict d = new KrollDict();
 
 
-	@Kroll.method
-	@Kroll.setProperty
-	public void setExampleProp(String value) {
-		Log.d(LCAT, "set example property: " + value);
+				Classifier.NsfwBean nsfwBean = classifier.run(resizedBitmap);
+
+		        final List<ClassifierSecond.Recognition> results =
+                  classifier2.recognizeImage(resizedBitmap, 90);
+
+
+					if (results != null && results.size() >= 3) {
+					      Recognition recognition = results.get(0);
+					      if (recognition != null) {
+						        if (recognition.getTitle() != null) {
+
+		        					//Log.e(LCAT, "title:"+recognition.getTitle());
+						        }
+						        if (recognition.getConfidence() != null){
+		        					//Log.e(LCAT, String.format("%.2f", (100 * recognition.getConfidence())) + "%");
+						        }
+								if (recognition.getConfidence() > 0.5){
+									second.put("classLabel", recognition.getTitle());						
+								}
+								output.put(recognition.getTitle(), recognition.getConfidence());
+					        }
+
+					      Recognition recognition1 = results.get(1);
+					      if (recognition1 != null) {
+					        if (recognition1.getTitle() != null) {
+		        					//Log.e(LCAT, "title:"+recognition1.getTitle());
+					        }
+					        if (recognition1.getConfidence() != null) {
+		        					//Log.e(LCAT, String.format("%.2f", (100 * recognition1.getConfidence())) + "%");
+					        }
+							if (recognition1.getConfidence() > 0.5){
+								second.put("classLabel", recognition1.getTitle());						
+							}
+							output.put(recognition1.getTitle(), recognition1.getConfidence());
+
+					      }
+
+					      Recognition recognition2 = results.get(2);
+					      if (recognition2 != null) {
+
+					        if (recognition2.getTitle() != null) {
+		        					//Log.e(LCAT, "title:"+recognition2.getTitle());
+					        }
+					        if (recognition2.getConfidence() != null) {
+  		        					//Log.e(LCAT, String.format("%.2f", (100 * recognition2.getConfidence())) + "%");
+					        }
+  							if (recognition2.getConfidence() > 0.5){
+								second.put("classLabel", recognition2.getTitle());						
+							}
+							output.put(recognition2.getTitle(), recognition2.getConfidence());
+
+					      }
+
+				    }
+
+				String classId = "SFW";
+				Float classIdConfidence = nsfwBean.getSfw();
+
+				if (nsfwBean.getNsfw() > 0.5){
+					
+					classId = "NSFW";
+					classIdConfidence = nsfwBean.getNsfw();
+
+				}
+				second.put("output", output);
+
+				d.put("identifier", classId);
+				d.put("confidence", classIdConfidence);
+				d.put("second", second);
+				classResult.put("class", d);
+
+				fireEvent("classification", classResult);
+
+		    } catch (IOException e) {
+				//Log.e(LCAT, "Error: "+e);
+		    }
+		}
 	}
 
 }

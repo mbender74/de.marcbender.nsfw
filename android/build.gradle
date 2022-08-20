@@ -1,0 +1,51 @@
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'kotlin-android-extensions'
+
+
+ext {
+  kotlin_ktx_version = '1.5.0'
+	kotlinVersion = '1.4.20'
+}
+
+
+repositories {	
+    google()
+    mavenCentral()
+  	jcenter()
+    gradlePluginPortal()
+    maven { url 'https://androidx.dev/snapshots/builds/6787662/artifacts/repository/' }
+}
+android {
+    defaultConfig {
+          multiDexEnabled true
+          vectorDrawables.useSupportLibrary = true
+          // setProperty("archivesBaseName", "vision-quickstart")
+       // renderscriptTargetApi 18
+      //  renderscriptSupportModeEnabled true
+    }
+    buildFeatures {
+        // viewBinding true
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    aaptOptions {
+        noCompress "tflite"
+        // or noCompress "lite"
+    }
+}
+dependencies {
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.5.31'
+    implementation 'androidx.multidex:multidex:2.0.1'
+    implementation 'com.google.mlkit:image-labeling:17.0.7'
+    implementation 'com.google.mlkit:image-labeling-custom:16.3.1'
+    implementation "com.google.android.odml:image:1.0.0-beta1"
+    implementation 'com.google.mlkit:vision-common:16.0.0'
+    implementation 'org.tensorflow:tensorflow-lite:2.6.0'
+    implementation 'org.tensorflow:tensorflow-lite-gpu:2.6.0'
+    implementation 'org.tensorflow:tensorflow-lite-support:0.4.1'
+
+
+}
